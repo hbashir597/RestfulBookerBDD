@@ -59,6 +59,8 @@ public sealed class BookerApiClient
         var request = new RestRequest(
             "/auth",
             Method.Post)
+            .AddHeader("Accept", "application/json")
+            .AddHeader("Content-Type", "application/json")
             .AddJsonBody(
                 new AuthRequest(
                     "admin",
@@ -79,6 +81,8 @@ public sealed class BookerApiClient
         var request = new RestRequest(
             "/booking",
             Method.Post)
+            .AddHeader("Accept", "application/json")
+            .AddHeader("Content-Type", "application/json")
             .AddJsonBody(booking);
 
         var response = await Execute(request);
@@ -92,10 +96,12 @@ public sealed class BookerApiClient
 
     public Task<RestResponse> Get(int id)
     {
-        return Execute(
-            new RestRequest(
-                $"/booking/{id}",
-                Method.Get));
+        var request = new RestRequest(
+            $"/booking/{id}",
+            Method.Get)
+            .AddHeader("Accept", "application/json");
+
+        return Execute(request);
     }
 
     public async Task<Booking> GetBooking(int id)
@@ -115,6 +121,8 @@ public sealed class BookerApiClient
         string token)
     {
         return new RestRequest(path, method)
+            .AddHeader("Accept", "application/json")
+            .AddHeader("Content-Type", "application/json")
             .AddCookie("token", token);
     }
 
@@ -173,10 +181,13 @@ public sealed class BookerApiClient
         int id,
         Booking booking)
     {
-        return Execute(
-            new RestRequest(
-                $"/booking/{id}",
-                Method.Put)
-                .AddJsonBody(booking));
+        var request = new RestRequest(
+            $"/booking/{id}",
+            Method.Put)
+            .AddHeader("Accept", "application/json")
+            .AddHeader("Content-Type", "application/json")
+            .AddJsonBody(booking);
+
+        return Execute(request);
     }
 }
