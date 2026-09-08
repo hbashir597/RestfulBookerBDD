@@ -1,4 +1,4 @@
-@api @regression
+@api @regression @contract
 Feature: Manage a booking through its lifecycle
 
   Background:

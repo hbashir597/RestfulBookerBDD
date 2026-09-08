@@ -22,6 +22,7 @@ namespace RestfulBooker.Tests.Features
     [global::NUnit.Framework.FixtureLifeCycleAttribute(global::NUnit.Framework.LifeCycle.InstancePerTestCase)]
     [global::NUnit.Framework.CategoryAttribute("api")]
     [global::NUnit.Framework.CategoryAttribute("regression")]
+    [global::NUnit.Framework.CategoryAttribute("contract")]
     public partial class ManageABookingThroughItsLifecycleFeature
     {
         
@@ -29,7 +30,8 @@ namespace RestfulBooker.Tests.Features
         
         private static string[] featureTags = new string[] {
                 "api",
-                "regression"};
+                "regression",
+                "contract"};
         
         private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new global::System.Globalization.CultureInfo("en"), "Features", "Manage a booking through its lifecycle", null, global::Reqnroll.ProgrammingLanguage.CSharp, featureTags, InitializeCucumberMessages());
         
