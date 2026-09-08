@@ -9,37 +9,48 @@ public sealed class ExtentHooks(ScenarioContext context)
 {
     private ExtentTest? _test;
 
+    private static readonly object ReportLock = new();
+
     [BeforeScenario(Order = -50)]
     public void Before()
     {
-        _test = ExtentReport.Instance
-            .CreateTest(context.ScenarioInfo.Title);
-
-        foreach (var tag in context.ScenarioInfo.CombinedTags)
+        lock (ReportLock)
         {
-            _test.AssignCategory(tag);
+            _test = ExtentReport.Instance
+                .CreateTest(context.ScenarioInfo.Title);
+
+            foreach (var tag in context.ScenarioInfo.CombinedTags)
+            {
+                _test.AssignCategory(tag);
+            }
         }
     }
 
     [AfterStep]
     public void Step()
     {
-        _test?.Info(
-            context.StepContext.StepInfo.Text);
+        lock (ReportLock)
+        {
+            _test?.Info(
+                context.StepContext.StepInfo.Text);
+        }
     }
 
     [AfterScenario(Order = 200)]
     public void After()
     {
-        if (context.TestError is null)
+        lock (ReportLock)
         {
-            _test?.Pass("Scenario passed");
-        }
-        else
-        {
-            _test?.Fail(context.TestError);
-        }
+            if (context.TestError is null)
+            {
+                _test?.Pass("Scenario passed");
+            }
+            else
+            {
+                _test?.Fail(context.TestError);
+            }
 
-        ExtentReport.Instance.Flush();
+            ExtentReport.Instance.Flush();
+        }
     }
 }
