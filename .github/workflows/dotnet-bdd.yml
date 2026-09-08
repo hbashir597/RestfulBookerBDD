@@ -1,0 +1,28 @@
+name: dotnet-bdd
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run tests
+        run: |
+          cd RestfulBooker.Tests
+          dotnet test --logger "trx;LogFileName=restful-booker.trx"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-test-reports
+          path: RestfulBooker.Tests/TestResults
