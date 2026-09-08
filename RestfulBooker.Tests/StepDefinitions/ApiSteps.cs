@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text.Json;
+using Json.Schema;
 using Reqnroll;
 using RestfulBooker.Tests.Api;
 using RestfulBooker.Tests.Models;
@@ -9,12 +11,12 @@ namespace RestfulBooker.Tests.StepDefinitions;
 [Binding]
 public sealed class ApiSteps(BookerApiClient api, ScenarioState state)
 {
-    private Booking Unique() =>
+    private Booking Unique(bool depositPaid = true) =>
         new(
             "Auto" + Guid.NewGuid().ToString("N")[..8],
             "Tester",
             450,
-            true,
+            depositPaid,
             new BookingDates(
                 DateTime.UtcNow.AddDays(7).ToString("yyyy-MM-dd"),
                 DateTime.UtcNow.AddDays(10).ToString("yyyy-MM-dd")),
@@ -64,6 +66,23 @@ public sealed class ApiSteps(BookerApiClient api, ScenarioState state)
         state.Latest = response.booking;
     }
 
+    [Given("I have a valid booking with deposit paid {string}")]
+    public void BookingWithDepositStatus(string depositPaid)
+    {
+        var paid = bool.Parse(depositPaid);
+
+        state.Expected = Unique(paid);
+    }
+
+    [When("I create the booking")]
+    public async Task CreatePreparedBooking()
+    {
+        var response = await api.Create(state.Expected!);
+
+        state.BookingId = response.bookingid;
+        state.Latest = response.booking;
+    }
+
     [Then("the booking should be created")]
     public void Created()
     {
@@ -79,6 +98,28 @@ public sealed class ApiSteps(BookerApiClient api, ScenarioState state)
         });
     }
 
+    [Then("the booking should be created successfully")]
+    public void CreatedSuccessfully()
+    {
+        Assert.That(
+            state.BookingId,
+            Is.GreaterThan(0));
+
+        Assert.That(
+            state.Latest,
+            Is.Not.Null);
+    }
+
+    [Then("the returned booking should have deposit paid {string}")]
+    public void VerifyDepositStatus(string depositPaid)
+    {
+        var expected = bool.Parse(depositPaid);
+
+        Assert.That(
+            state.Latest!.depositpaid,
+            Is.EqualTo(expected));
+    }
+
     [Then("the booking should be retrievable")]
     public async Task Retrieve()
     {
@@ -88,6 +129,43 @@ public sealed class ApiSteps(BookerApiClient api, ScenarioState state)
         Assert.That(
             state.Latest.lastname,
             Is.EqualTo("Tester"));
+    }
+
+    [Then("the GET booking response should match the booking schema")]
+    public async Task ValidateBookingSchema()
+    {
+        var response =
+            await api.Get(state.BookingId);
+
+        Assert.That(
+            (int)response.StatusCode,
+            Is.EqualTo(200));
+
+        Assert.That(
+            response.Content,
+            Is.Not.Null.And.Not.Empty);
+
+        var schemaPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Schemas",
+            "booking-schema.json");
+
+        var schemaText =
+            await File.ReadAllTextAsync(schemaPath);
+
+        var schema =
+            JsonSchema.FromText(schemaText);
+
+        using var document =
+            JsonDocument.Parse(response.Content!);
+
+        var result =
+            schema.Evaluate(document.RootElement);
+
+        Assert.That(
+            result.IsValid,
+            Is.True,
+            "GET booking response did not match the JSON schema.");
     }
 
     [When("I replace the booking details")]

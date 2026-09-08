@@ -11,6 +11,7 @@
 	<ItemGroup>
 		<PackageReference Include="Allure.Reqnroll" Version="2.15.0" />
 		<PackageReference Include="coverlet.collector" Version="6.0.4" />
+		<PackageReference Include="JsonSchema.Net" Version="9.4.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
 		<PackageReference Include="NUnit" Version="4.3.2" />
 		<PackageReference Include="NUnit.Analyzers" Version="4.7.0" />
@@ -28,6 +29,10 @@
 
 	<ItemGroup>
 		<None Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Update="Schemas\booking-schema.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

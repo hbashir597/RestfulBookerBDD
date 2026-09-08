@@ -8,6 +8,8 @@ namespace RestfulBooker.Tests.Api;
 
 public sealed class BookerApiClient
 {
+    private readonly ScenarioState _state;
+
     private readonly RestClient _client =
         new(
             new RestClientOptions(TestSettings.Load().BaseUrl)
@@ -20,14 +22,32 @@ public sealed class BookerApiClient
         PropertyNameCaseInsensitive = true
     };
 
-    private async Task<RestResponse> Execute(RestRequest request)
+    public BookerApiClient(ScenarioState state)
     {
+        _state = state;
+    }
+
+    private async Task<RestResponse> Execute(
+        RestRequest request,
+        object? requestBody = null)
+    {
+        _state.LastRequestBody =
+            requestBody is null
+                ? null
+                : JsonSerializer.Serialize(
+                    requestBody,
+                    _jsonOptions);
+
         Log.Instance.Information(
             "{Method} {Resource}",
             request.Method,
             request.Resource);
 
-        var response = await _client.ExecuteAsync(request);
+        var response =
+            await _client.ExecuteAsync(request);
+
+        _state.LastResponse = response;
+        _state.LastResponseBody = response.Content;
 
         Log.Instance.Information(
             "Status {Status}; Body {Body}",
@@ -60,17 +80,20 @@ public sealed class BookerApiClient
 
     public async Task<AuthResponse> Authenticate()
     {
+        var body =
+            new AuthRequest(
+                "admin",
+                "password123");
+
         var request = new RestRequest(
             "/auth",
             Method.Post)
             .AddHeader("Accept", "application/json")
             .AddHeader("Content-Type", "application/json")
-            .AddJsonBody(
-                new AuthRequest(
-                    "admin",
-                    "password123"));
+            .AddJsonBody(body);
 
-        var response = await Execute(request);
+        var response =
+            await Execute(request, body);
 
         Assert.That(
             (int)response.StatusCode,
@@ -89,7 +112,8 @@ public sealed class BookerApiClient
             .AddHeader("Content-Type", "application/json")
             .AddJsonBody(booking);
 
-        var response = await Execute(request);
+        var response =
+            await Execute(request, booking);
 
         Assert.That(
             (int)response.StatusCode,
@@ -141,7 +165,8 @@ public sealed class BookerApiClient
                 token)
             .AddJsonBody(booking);
 
-        var response = await Execute(request);
+        var response =
+            await Execute(request, booking);
 
         Assert.That(
             (int)response.StatusCode,
@@ -161,7 +186,8 @@ public sealed class BookerApiClient
                 token)
             .AddJsonBody(body);
 
-        var response = await Execute(request);
+        var response =
+            await Execute(request, body);
 
         Assert.That(
             (int)response.StatusCode,
@@ -192,6 +218,6 @@ public sealed class BookerApiClient
             .AddHeader("Content-Type", "application/json")
             .AddJsonBody(booking);
 
-        return Execute(request);
+        return Execute(request, booking);
     }
 }

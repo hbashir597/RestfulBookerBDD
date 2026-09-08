@@ -7,7 +7,8 @@ namespace RestfulBooker.Tests.Hooks;
 [Binding]
 public sealed class TestHooks(
     DriverFactory drivers,
-    ScenarioContext context)
+    ScenarioContext context,
+    ScenarioState state)
 {
     [AfterScenario("ui", Order = 100)]
     public void AfterUi()
@@ -33,6 +34,35 @@ public sealed class TestHooks(
         finally
         {
             drivers.Dispose();
+        }
+    }
+
+    [AfterScenario("api", Order = 150)]
+    public void AfterApi()
+    {
+        if (context.TestError is null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(state.LastRequestBody))
+        {
+            AllureApi.AddAttachment(
+                "REST request body",
+                "application/json",
+                System.Text.Encoding.UTF8.GetBytes(
+                    state.LastRequestBody),
+                ".json");
+        }
+
+        if (!string.IsNullOrWhiteSpace(state.LastResponseBody))
+        {
+            AllureApi.AddAttachment(
+                "REST response body",
+                "application/json",
+                System.Text.Encoding.UTF8.GetBytes(
+                    state.LastResponseBody),
+                ".json");
         }
     }
 }
