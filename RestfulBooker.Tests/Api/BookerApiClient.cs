@@ -9,7 +9,11 @@ namespace RestfulBooker.Tests.Api;
 public sealed class BookerApiClient
 {
     private readonly RestClient _client =
-        new(TestSettings.Load().BaseUrl);
+        new(
+            new RestClientOptions(TestSettings.Load().BaseUrl)
+            {
+                Timeout = TimeSpan.FromSeconds(10)
+            });
 
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
