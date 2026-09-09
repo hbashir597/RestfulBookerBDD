@@ -9,9 +9,16 @@ public static class ExtentReport
 
     static ExtentReport()
     {
+        var projectDirectory = Path.GetFullPath(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "..",
+                "..",
+                ".."));
+
         var reportDirectory = Path.Combine(
-            AppContext.BaseDirectory,
-            "TestResults");
+            projectDirectory,
+            "Reports");
 
         Directory.CreateDirectory(reportDirectory);
 
